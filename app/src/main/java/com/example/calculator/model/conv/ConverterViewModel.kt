@@ -1,6 +1,5 @@
 package com.example.calculator.model.conv
 
-import android.util.Log
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
@@ -315,6 +314,10 @@ class ConverterViewModel : ViewModel() {
                 if (regex2.containsMatchIn(temp)) {
                     return "ERROR"
                 }
+                val regex3 = Regex("\\p{L}")
+                if (regex3.containsMatchIn(temp)) {
+                    return "ERROR"
+                }
                 val expr = ExpressionBuilder(temp).build()
                 try {
                     expr.evaluate()
@@ -406,14 +409,14 @@ class ConverterViewModel : ViewModel() {
                     _state.update { prev ->
                         val newRate =
                             if (prev.rate != 0.0) {
-                                rates[prev.quote]
+                                rates[prev.quote] ?: 0.0
                             } else {
-                                rates["usd"]
+                                rates["usd"] ?: 0.0
                             }
-                        val convertedResult = convertResult(prev.result, newRate ?: 0.0)
+                        val convertedResult = convertResult(prev.result, newRate)
                         prev.copy(
                             rates = rates,
-                            rate = newRate ?: 0.0,
+                            rate = newRate,
                             base = basee,
                             convertedResult = convertedResult
                         )
@@ -434,10 +437,10 @@ class ConverterViewModel : ViewModel() {
 
     private fun handleChangeRate(quote: String) {
         _state.update { prev ->
-            val newRate = prev.rates[quote]
-            val convertedResult = convertResult(prev.result, newRate ?: 0.0)
+            val newRate = prev.rates[quote] ?: 0.0
+            val convertedResult = convertResult(prev.result, newRate)
             prev.copy(
-                rate = newRate ?: 0.0,
+                rate = newRate,
                 convertedResult = convertedResult,
                 quote = quote
             )
@@ -459,17 +462,17 @@ class ConverterViewModel : ViewModel() {
                     }
                     val responseBody =
                         response.body?.string() ?: throw IOException("Empty response body")
-                    val jsonObject = JsonParser.parseString(responseBody).asJsonObject;
-                    val responseList = jsonObject.getAsJsonObject(quote).toString();
+                    val jsonObject = JsonParser.parseString(responseBody).asJsonObject
+                    val responseList = jsonObject.getAsJsonObject(quote).toString()
                     val gson = Gson()
                     val mapType = object : TypeToken<Map<String, Double>>() {}.type
                     val rates: Map<String, Double> = gson.fromJson(responseList, mapType)
                     _state.update { prev ->
-                        val newRate = rates[base]
-                        val convertedResult = convertResult(prev.result, newRate ?: 0.0)
+                        val newRate = rates[base] ?: 0.0
+                        val convertedResult = convertResult(prev.result, newRate)
                         prev.copy(
                             rates = rates,
-                            rate = newRate ?: 0.0,
+                            rate = newRate,
                             base = quote,
                             quote = base,
                             convertedResult = convertedResult

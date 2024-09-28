@@ -314,6 +314,10 @@ class CalculatorViewModel : ViewModel() {
                 if (regex2.containsMatchIn(temp)) {
                     return "ERROR"
                 }
+                val regex3 = Regex("\\p{L}")
+                if (regex3.containsMatchIn(temp)) {
+                    return "ERROR"
+                }
                 val expr = ExpressionBuilder(temp).build()
                 try {
                     expr.evaluate()
